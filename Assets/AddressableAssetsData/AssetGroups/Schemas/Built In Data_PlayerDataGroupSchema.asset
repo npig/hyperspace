@@ -9,12 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1148507213, guid: 5b00bf8b25851d440940a40ec23344f4, type: 3}
-  m_Name: BoltPrefabDatabase
+  m_Script: {fileID: 11500000, guid: b1487f5d688e4f94f828f879d599dbdc, type: 3}
+  m_Name: Built In Data_PlayerDataGroupSchema
   m_EditorClassIdentifier: 
-  DatabaseMode: 0
-  Prefabs:
-  - {fileID: 0}
-  - {fileID: 1338275405607394577, guid: 1fe0989213e43b947a7ecdbbce525162, type: 3}
-  SearchPaths:
-  - Assets/_hyperspace/prefabs
+  m_Group: {fileID: 11400000, guid: 40d464f7cf3145c40b6808e1e6a3758a, type: 2}
+  m_IncludeResourcesFolders: 1
+  m_IncludeBuildSettingsScenes: 1

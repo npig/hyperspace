@@ -10,7 +10,9 @@ using Photon.Bolt;
 using Photon.Bolt.Matchmaking;
 using UdpKit;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.PlayerLoop;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using WebSocketSharp;
 
@@ -90,6 +92,12 @@ namespace Hyperspace
             }
 
             return null;
+        }
+        
+        public static async UniTask<T> LoadAsset<T>(string asset)
+        {
+            AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(asset);
+            return await handle.ToUniTask();
         }
     }
 

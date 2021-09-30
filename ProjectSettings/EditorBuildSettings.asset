@@ -11,4 +11,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_hyperspace/scenes/game.unity
     guid: fe0540777d9f7634bb728bb62121a87a
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: c1600b21c9fa78d4f9ffb320aeff7b64,
+      type: 2}

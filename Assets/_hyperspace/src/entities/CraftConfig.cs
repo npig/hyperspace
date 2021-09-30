@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using Hyperspace;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Photon.Bolt;
 using Photon.Bolt.Utils;
 using UdpKit;
 using UnityEngine;
-using Event = Hyperspace.Event;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Hyperspace.Entities
 {
@@ -80,8 +81,8 @@ namespace Hyperspace.Entities
 
     public class ProjectileBase
     {
-        private const string SERVER_PROJECTILE = "_projectileServer";
-        private const string CLIENT_PROJECTILE = "_projectileClient";
+        private const string SERVER_PROJECTILE = "projectileServer";
+        private const string CLIENT_PROJECTILE = "projectileClient";
         
         private GameObject ServerProjectile;
         private GameObject ClientProjectile;
@@ -90,8 +91,13 @@ namespace Hyperspace.Entities
 
         public ProjectileBase()
         {
-            ServerProjectile = Resources.Load<GameObject>(SERVER_PROJECTILE);
-            ClientProjectile = Resources.Load<GameObject>(CLIENT_PROJECTILE);
+            _ = LoadPrefabs();
+        }
+
+        public async UniTaskVoid LoadPrefabs()
+        {
+            ServerProjectile = await Engine.LoadAsset<GameObject>(SERVER_PROJECTILE);
+            ClientProjectile = await Engine.LoadAsset<GameObject>(CLIENT_PROJECTILE);
         }
 
         public virtual void OnOwner (CraftCommand cmd, BoltEntity entity)
