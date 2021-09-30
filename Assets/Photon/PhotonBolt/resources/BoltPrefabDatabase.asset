@@ -17,4 +17,4 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 1338275405607394577, guid: 1fe0989213e43b947a7ecdbbce525162, type: 3}
   SearchPaths:
-  - Assets/_hyperspace/prefabs
+  - Assets
