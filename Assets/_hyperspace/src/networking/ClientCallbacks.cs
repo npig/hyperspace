@@ -10,8 +10,11 @@ namespace Hyperspace.Networking
     {
         public override void SceneLoadLocalDone(string scene, IProtocolToken token)
         {
-            if(scene == "game")
+            if (scene == "game")
+            {
                 Engine.UIManager.LoadScreen(new GameMenu());
+                //Engine.UIManager.LoadWindow(new GUI());
+            }
         }
         
         public override void BoltStartDone()

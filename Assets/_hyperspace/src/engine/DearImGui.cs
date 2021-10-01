@@ -1,7 +1,9 @@
-﻿using ImGuiNET;
+﻿using System.Linq;
+using ImGuiNET;
 using ImGuiNET.Unity;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace Hyperspace
 {
@@ -43,6 +45,8 @@ namespace Hyperspace
         {
             _context = ImGuiUn.CreateUnityContext();
             _camera = camera;
+            ForwardRendererData frd = Resources.Load<ForwardRendererData>("URP_Forward");
+            _renderFeature = frd.rendererFeatures.First(x => x.name == "ImGuiFeature") as RenderImGuiFeature;
             _shaders = Resources.Load<ShaderResourcesAsset>("DefaultShaderResources");
             _style = Resources.Load<StyleAsset>("DefaultStyle");
             _cursorShapes = Resources.Load<CursorShapesAsset>("DefaultCursorShapes");

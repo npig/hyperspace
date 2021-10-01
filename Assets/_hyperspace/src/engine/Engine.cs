@@ -9,6 +9,7 @@ using ImGuiNET.Unity;
 using Photon.Bolt;
 using Photon.Bolt.Matchmaking;
 using UdpKit;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.PlayerLoop;
@@ -28,7 +29,6 @@ namespace Hyperspace
         public static UIManager UIManager { get; private set; }
         public static InputManager InputManager { get; private set; }
 
-        private static Config _config; 
         private static void StartServer() => BoltLauncher.StartServer();
         private static void StartClient() => BoltLauncher.StartClient();
 
@@ -55,16 +55,24 @@ namespace Hyperspace
             InputManager = ServiceManager.CreateService<InputManager>();
             UIManager = ServiceManager.CreateService<UIManager>();
 
-            _config = Resources.Load<Config>("HSConfig");
-            
-            if (_config.EnableServer || CheckServerMode())
+#if UNITY_EDITOR
+            if (EditorPrefs.GetBool("EnableServer"))
             {
                 StartServer();
                 Application.targetFrameRate = 60;
                 return;
             }
+#endif
             
-            StartClient();
+            if (CheckServerMode())
+            {
+                StartServer();
+                Application.targetFrameRate = 60;
+            }
+            else
+            {
+                StartClient();
+            }
         }
 
         public static bool IsHeadlessMode()
@@ -115,7 +123,7 @@ namespace Hyperspace
                 Quaternion.Euler(new Vector3(90, 0, 0))
             );
             MainCamera.orthographic = true;
-            MainCamera.orthographicSize = 20;
+            MainCamera.orthographicSize = 100;
             MainCamera.clearFlags = CameraClearFlags.SolidColor;
             MainCamera.backgroundColor = new Color(.1f,.1f,.1f);
         }

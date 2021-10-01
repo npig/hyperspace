@@ -241,7 +241,7 @@ namespace Hyperspace
 		public event OnEventUnblockedDelegate OnEventUnblocked;
 
 		// Cleanup the bindings to remove any hanging assets
-		public void OnShutdown()
+		public override void OnShutdown()
 		{
 			ClearAllEventBindings();
 		}

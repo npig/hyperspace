@@ -11,12 +11,11 @@ namespace Hyperspace
 {
     public class GameMenu : UILayout
     {
-        private int _selectedItem = 0;
-        private string[] _serverList = new string[] { "no servers found" }; 
+        private int _energy = 100;
         
         internal override void OnLayout()
         {
-            ImGui.Begin("HYPERSPACE", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar);
+            ImGui.Begin("HYPERSPACE", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar);
             ImGui.SetWindowPos(new Vector2( 10, 10));
             ImGui.SetWindowSize(new Vector2(Screen.width / 10, Screen.height / 2));
             
@@ -26,30 +25,17 @@ namespace Hyperspace
                 request.CraftType = 0;
                 request.Send();
             }
+            
+            /*
+            ImGui.BeginPopupContextWindow("nrg_stat");
+            ImGui.Text($"Player");
+            ImGui.SameLine();
+            ImGui.SliderInt("Energy", ref _energy, 0, 100);
+            ImGui.EndPopup();
+            
+            ImGui.OpenPopup("nrg_stat");*/
+            
             ImGui.End();
-        }
-
-        private string[] GetServerList()
-        {
-            return _serverList;
-        }
-
-        private string[] BuildServerList()
-        {
-            var sessionList = NetworkManager.GetSessionList(); 
-            
-            if (sessionList.Count == 0)
-               return new [] { "no servers found" }; 
-            
-            string[] sessions = new string[sessionList.Count];
-
-            for (int i = 0; i < sessionList.Count; i++)
-            {
-                var session = sessionList.ElementAt(i);
-                sessions[i] = $"{session.Value.HostName} - {session.Value.ConnectionsCurrent} / {session.Value.ConnectionsMax}";
-            }
-
-            return sessions;
         }
     }
     
@@ -60,7 +46,7 @@ namespace Hyperspace
         
         internal override void OnLayout()
         {
-            ImGui.Begin("HYPERSPACE", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar);
+            ImGui.Begin("HYPERSPACE");
             ImGui.SetWindowSize(new Vector2(Screen.width / 4, Screen.height / 4));
             ImGui.SetWindowPos(new Vector2(Screen.width / 2 - Screen.width / 8, Screen.height / 2));
             

@@ -87,6 +87,8 @@ namespace Hyperspace.Entities
         private GameObject ServerProjectile;
         private GameObject ClientProjectile;
         
+        public float cooldown = .5f;
+        public int cost = 2;
         public int fireFrame;
 
         public ProjectileBase()

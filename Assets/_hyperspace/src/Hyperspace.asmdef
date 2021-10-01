@@ -2,15 +2,15 @@
     "name": "Hyperspace",
     "rootNamespace": "",
     "references": [
+        "GUID:84651a3751eca9349aac36a66bba901b",
+        "GUID:9e24947de15b9834991c9d8411ea37cf",
+        "GUID:15fc0a57446b3144c949da3e2b9737a9",
         "GUID:831409e8f9d13b5479a3baef9822ad34",
         "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:593a5b492d29ac6448b1ebf7f035ef33",
         "GUID:20ee313e09faec446a26ffa1daf5636b",
         "GUID:fed1b9451fde4474bbc2aad5bda39aca",
-        "GUID:763296ee42f3f404aadd6c58c79ab09a",
-        "GUID:15fc0a57446b3144c949da3e2b9737a9",
-        "GUID:9e24947de15b9834991c9d8411ea37cf",
-        "GUID:84651a3751eca9349aac36a66bba901b",
-        "GUID:593a5b492d29ac6448b1ebf7f035ef33"
+        "GUID:763296ee42f3f404aadd6c58c79ab09a"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

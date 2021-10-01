@@ -98,12 +98,16 @@ namespace Hyperspace.Entities
         
         private void FireProjectile(CraftCommand command)
         {
-            _projectile.fireFrame = BoltNetwork.ServerFrame;
-            state.Fire();
-
-            if (entity.IsOwner)
+            if (_projectile.fireFrame + _projectile.cooldown <= BoltNetwork.ServerFrame && state.CraftData.Energy - _projectile.cost > 0)
             {
-                _projectile.OnOwner(command, entity);
+                _projectile.fireFrame = BoltNetwork.ServerFrame;
+                state.CraftData.Energy -= _projectile.cost;
+                state.Fire();
+
+                if (entity.IsOwner)
+                {
+                    _projectile.OnOwner(command, entity);
+                }
             }
         }
         
