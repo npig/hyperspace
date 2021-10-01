@@ -47,8 +47,10 @@ namespace Hyperspace
         internal override void OnLayout()
         {
             ImGui.Begin("HYPERSPACE");
+            /*
             ImGui.SetWindowSize(new Vector2(Screen.width / 4, Screen.height / 4));
             ImGui.SetWindowPos(new Vector2(Screen.width / 2 - Screen.width / 8, Screen.height / 2));
+            */
             
             ImGui.Text($"Server List");
             

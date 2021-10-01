@@ -5,10 +5,10 @@ using Hyperspace.Entities;
 using Hyperspace.Networking;
 using Hyperspace.Utils;
 using ImGuiNET;
-using ImGuiNET.Unity;
 using Photon.Bolt;
 using Photon.Bolt.Matchmaking;
 using UdpKit;
+using UImGui;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -241,14 +241,15 @@ namespace Hyperspace
     {
         public virtual void Load()
         {
-            ImGuiUn.Layout += OnLayout;
+            UImGuiUtility.Layout += OnLayout;
         }
 
         internal abstract void OnLayout();
 
         public virtual void Dispose()
         {
-            ImGuiUn.Layout -= OnLayout;
+            UImGuiUtility.Layout -= OnLayout;
+            
         }
     }
 

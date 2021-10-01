@@ -1,6 +1,9 @@
 ﻿using System.Linq;
 using ImGuiNET;
-using ImGuiNET.Unity;
+using UImGui;
+using UImGui.Assets;
+using UImGui.Platform;
+using UImGui.Renderer;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -16,22 +19,45 @@ namespace Hyperspace
     /// </summary>
     public class DearImGui : EngineService 
     {
-        ImGuiUnityContext _context;
-        IImGuiRenderer _renderer;
-        IImGuiPlatform _platform;
+        Context _context;
+        IRenderer _renderer;
+        IPlatform _platform;
         CommandBuffer _cmd;
-        bool _usingURP;
 
         public event System.Action Layout;  // Layout event for *this* ImGui instance
         bool _doGlobalLayout = true; // do global/default Layout event too
 
         UnityEngine.Camera _camera = null;
-        RenderImGuiFeature _renderFeature = null;
+        RenderImGui _renderFeature = null;
 
-        RenderUtils.RenderType _rendererType = RenderUtils.RenderType.Mesh;
-        ImGuiNET.Unity.Platform.Type _platformType = ImGuiNET.Unity.Platform.Type.InputManager;
+        RenderType _rendererType = RenderType.Mesh;
+        InputType _platformType = InputType.InputManager;
 
-        IOConfig _initialConfiguration = default;
+		private UIOConfig _initialConfiguration = new UIOConfig
+		{
+			ImGuiConfig = ImGuiConfigFlags.NavEnableKeyboard | ImGuiConfigFlags.DockingEnable,
+
+			DoubleClickTime = 0.30f,
+			DoubleClickMaxDist = 6.0f,
+
+			DragThreshold = 6.0f,
+
+			KeyRepeatDelay = 0.250f,
+			KeyRepeatRate = 0.050f,
+
+			FontGlobalScale = 1.0f,
+			FontAllowUserScaling = false,
+
+			DisplayFramebufferScale = Vector2.one,
+
+			MouseDrawCursor = false,
+			TextCursorBlink = false,
+
+			ResizeFromEdges = true,
+			MoveFromTitleOnly = true,
+			ConfigMemoryCompactTimer = 1f,
+		};
+		
         FontAtlasConfigAsset _fontAtlasConfiguration = null;
         IniSettingsAsset _iniSettings = null;  // null: uses default imgui.ini file
 
@@ -43,46 +69,54 @@ namespace Hyperspace
 
         public DearImGui(UnityEngine.Camera camera)
         {
-            _context = ImGuiUn.CreateUnityContext();
+            _context = UImGuiUtility.CreateContext();
             _camera = camera;
             ForwardRendererData frd = Resources.Load<ForwardRendererData>("URP_Forward");
-            _renderFeature = frd.rendererFeatures.First(x => x.name == "ImGuiFeature") as RenderImGuiFeature;
-            _shaders = Resources.Load<ShaderResourcesAsset>("DefaultShaderResources");
+            _renderFeature = frd.rendererFeatures.First(x => x.name == "ImGuiFeature") as RenderImGui;
+            _shaders = Resources.Load<ShaderResourcesAsset>("DefaultShader");
             _style = Resources.Load<StyleAsset>("DefaultStyle");
-            _cursorShapes = Resources.Load<CursorShapesAsset>("DefaultCursorShapes");
-            _usingURP = RenderUtils.IsUsingURP();
-           _initialConfiguration.SetDefaults();
+            _cursorShapes = Resources.Load<CursorShapesAsset>("DefaultCursorShape");
             
             if (_camera == null) 
                 Fail(nameof(_camera));
             
-            if (_renderFeature == null && _usingURP) 
+            if (_renderFeature == null) 
                 Fail(nameof(_renderFeature));
 
-            _cmd = RenderUtils.GetCommandBuffer(CommandBufferTag);
-            
-            if (_usingURP)
-                _renderFeature.commandBuffer = _cmd;
-            else
-                _camera.AddCommandBuffer(CameraEvent.AfterEverything, _cmd);
+            _cmd = RenderUtility.GetCommandBuffer("UImGui");
 
-            ImGuiUn.SetUnityContext(_context);
+            if (RenderUtility.IsUsingURP())
+            {
+				_renderFeature.Camera = _camera;
+	            _renderFeature.CommandBuffer = _cmd;
+            }
+            else 
+            {
+	            _camera.AddCommandBuffer(CameraEvent.AfterEverything, _cmd);
+            }
+
+            UImGuiUtility.SetCurrentContext(_context);
             ImGuiIOPtr io = ImGui.GetIO();
 
             _initialConfiguration.ApplyTo(io);
             _style?.ApplyTo(ImGui.GetStyle());
 
-            _context.textures.BuildFontAtlas(io, _fontAtlasConfiguration);
-            _context.textures.Initialize(io);
+            _context.TextureManager.BuildFontAtlas(io, _fontAtlasConfiguration);
+            _context.TextureManager.Initialize(io);
 
-            SetPlatform(ImGuiNET.Unity.Platform.Create(_platformType, _cursorShapes, _iniSettings), io);
-            SetRenderer(RenderUtils.Create(_rendererType, _shaders, _context.textures), io);
+			IPlatform platform = PlatformUtility.Create(_platformType, _cursorShapes, _iniSettings);
+			SetPlatform(platform, io);
+			
+            if (_platform == null)
+			{
+				Fail(nameof(_platform));
+			}
             
-            if (_platform == null) 
-                Fail(nameof(_platform));
-            
-            if (_renderer == null) 
+			SetRenderer(RenderUtility.Create(_rendererType, _shaders, _context.TextureManager), io);
+            if (_renderer == null)
+            {
                 Fail(nameof(_renderer));
+            }
 
             void Fail(string reason)
             {
@@ -90,20 +124,19 @@ namespace Hyperspace
             }
         }
 
-
         public override void OnTick()
         {
-            ImGuiUn.SetUnityContext(_context);
+			UImGuiUtility.SetCurrentContext(_context);
             ImGuiIOPtr io = ImGui.GetIO();
-
-            _context.textures.PrepareFrame(io);
+            _context.TextureManager.PrepareFrame(io);
             _platform.PrepareFrame(io, _camera.pixelRect);
             ImGui.NewFrame();
 
             try
             {
                 if (_doGlobalLayout)
-                    ImGuiUn.DoLayout();   // ImGuiUn.Layout: global handlers
+					UImGuiUtility.DoLayout();
+                
                 Layout?.Invoke();     // this.Layout: handlers specific to this instance
             }
             finally
@@ -117,54 +150,64 @@ namespace Hyperspace
        
         public override void OnShutdown()
         {
-            ImGuiUn.SetUnityContext(_context);
+			UImGuiUtility.SetCurrentContext(_context);
             ImGuiIOPtr io = ImGui.GetIO();
 
             SetRenderer(null, io);
             SetPlatform(null, io);
 
-            ImGuiUn.SetUnityContext(null);
+			UImGuiUtility.SetCurrentContext(null);
 
-            _context.textures.Shutdown();
-            _context.textures.DestroyFontAtlas(io);
+			_context.TextureManager.Shutdown();
+			_context.TextureManager.DestroyFontAtlas(io);
 
-            if (_usingURP)
-            {
-                if (_renderFeature != null)
-                    _renderFeature.commandBuffer = null;
-            }
-            else
-            {
-                if (_camera != null)
-                    _camera.RemoveCommandBuffer(CameraEvent.AfterEverything, _cmd);
-            }
+			if (RenderUtility.IsUsingURP())
+			{
+				if (_renderFeature != null)
+				{
+#if HAS_URP
+					_renderFeature.Camera = null;
+#endif
+					_renderFeature.CommandBuffer = null;
+				}
+			}
+			else
+			{
+				if (_camera != null)
+				{
+					_camera.RemoveCommandBuffer(CameraEvent.AfterEverything, _cmd);
+				}
+			}
+
 
             if (_cmd != null)
-                RenderUtils.ReleaseCommandBuffer(_cmd);
+                RenderUtility.ReleaseCommandBuffer(_cmd);
             
             _cmd = null;
             
-            ImGuiUn.DestroyUnityContext(_context);
+			UImGuiUtility.DestroyContext(_context);
         }
         
-        private void Reset()
-        {
-            _camera = UnityEngine.Camera.main;
-            _initialConfiguration.SetDefaults();
-        }
+		private void Reset()
+		{
+			_camera = Engine.Camera.MainCamera;
+			_initialConfiguration.SetDefaults();
+		}
 
-        private void SetRenderer(IImGuiRenderer renderer, ImGuiIOPtr io)
-        {
-            _renderer?.Shutdown(io);
-            _renderer = renderer;
-            _renderer?.Initialize(io);
-        }
 
-       private void SetPlatform(IImGuiPlatform platform, ImGuiIOPtr io)
-        {
-            _platform?.Shutdown(io);
-            _platform = platform;
-            _platform?.Initialize(io);
-        }
+		private void SetRenderer(IRenderer renderer, ImGuiIOPtr io)
+		{
+			_renderer?.Shutdown(io);
+			_renderer = renderer;
+			_renderer?.Initialize(io);
+		}
+
+		private void SetPlatform(IPlatform platform, ImGuiIOPtr io)
+		{
+			_platform?.Shutdown(io);
+			_platform = platform;
+			_platform?.Initialize(io, _initialConfiguration, "Unity " + _platformType.ToString());
+		}
+
     }
 }

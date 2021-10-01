@@ -12,10 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 1391968507, guid: 5b00bf8b25851d440940a40ec23344f4, type: 3}
   m_Name: BoltProtocolTokenRegistry
   m_EditorClassIdentifier: 
-  protocolTokenRegistry:
-  - DisplayName: Hyperspace.Entities.CraftConfig
-    AssemblyName: Hyperspace.Entities.CraftConfig, Hyperspace, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
-  - DisplayName: Hyperspace.Entities.ProjectileData
-    AssemblyName: Hyperspace.Entities.ProjectileData, Hyperspace, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
+  protocolTokenRegistry: []
