@@ -4,6 +4,6 @@ public class Projectile : MonoBehaviour
 {
     public void Update()
     {
-        transform.position += transform.forward * .015f;
+        transform.position += transform.forward * .1f;
     }
 }

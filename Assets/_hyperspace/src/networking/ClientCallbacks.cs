@@ -13,20 +13,17 @@ namespace Hyperspace.Networking
             if (scene == "game")
             {
                 Engine.UIManager.LoadScreen(new GameMenu());
-                //Engine.UIManager.LoadWindow(new GUI());
             }
         }
         
         public override void BoltStartDone()
         {
-            Engine.UIManager.LoadScreen(new MainMenu());
+            Engine.UIManager.LoadScreen(new MainScreen());
         }
 
-        public override void Connected(BoltConnection connection) { }
-
-        public override void ControlOfEntityGained(BoltEntity entity)
+        public override void Connected(BoltConnection connection)
         {
-            base.ControlOfEntityGained(entity);
+            NetworkManager.SetLocalConnection(connection);
         }
 
         public override void SessionConnected(UdpSession session, IProtocolToken token)
@@ -38,6 +35,12 @@ namespace Hyperspace.Networking
         {
             Debug.LogFormat("Session list updated: {0} total sessions", sessionList.Count);
             NetworkManager.SetSessionList(sessionList);
+        }
+
+        public override void ControlOfEntityGained(BoltEntity entity)
+        {
+            UILayout layout = new GameHUD(entity);
+            layout.Load();
         }
     }
 }

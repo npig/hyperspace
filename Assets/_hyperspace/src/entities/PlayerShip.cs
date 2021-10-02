@@ -44,6 +44,9 @@ namespace Hyperspace.Entities
             ICraftCommandInput input = CraftCommand.Create();
             input = Engine.InputManager.GetInputState(input);
             entity.QueueInput(input);
+
+            if(state.CraftData.Energy < 100)
+                state.CraftData.Energy += 1;
         }
 
         public override void ExecuteCommand(Command command, bool resetState)

@@ -87,9 +87,9 @@ namespace Hyperspace.Entities
         private GameObject ServerProjectile;
         private GameObject ClientProjectile;
         
-        public float cooldown = .5f;
-        public int cost = 2;
-        public int fireFrame;
+        public float cooldown = 20f;
+        public int cost = 5;
+        public float fireFrame = 0;
 
         public ProjectileBase()
         {
@@ -123,6 +123,7 @@ namespace Hyperspace.Entities
         public static Player serverPlayer;
 
         public IPlayerShipState State => Entity.GetState<IPlayerShipState>();
+        public CraftData Data => State.CraftData; 
         
         public Player(string name, BoltConnection connection)
         {

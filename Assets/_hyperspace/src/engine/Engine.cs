@@ -129,7 +129,7 @@ namespace Hyperspace
                 Quaternion.Euler(new Vector3(90, 0, 0))
             );
             MainCamera.orthographic = true;
-            MainCamera.orthographicSize = 100;
+            MainCamera.orthographicSize = 12;
             MainCamera.clearFlags = CameraClearFlags.SolidColor;
             MainCamera.backgroundColor = new Color(.1f,.1f,.1f);
         }
@@ -137,9 +137,19 @@ namespace Hyperspace
 
     public class NetworkManager : EngineService
     {
+        //Server
         private static Map<Guid, UdpSession> _sessionList = new Map<Guid, UdpSession>();
         private static List<Player> _playerList = new List<Player>();
-
+        
+        //Client
+        private static BoltConnection _localConnection;
+        public static Player LocalPlayer => _localConnection?.GetPlayer();
+        
+        public static void SetLocalConnection(BoltConnection connection)
+        {
+            _localConnection = connection;
+        }
+        
         //Server
         public static void AddPlayer(Player player)
         {
