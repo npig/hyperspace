@@ -56,6 +56,12 @@ namespace Hyperspace
             UIManager = ServiceManager.CreateService<UIManager>();
 
 #if UNITY_EDITOR
+            if (EditorPrefs.GetBool("EnableUIDev"))
+            {
+                UIManager.LoadScreen(new GameMenu());
+                return;
+            }
+            
             if (EditorPrefs.GetBool("EnableServer"))
             {
                 StartServer();

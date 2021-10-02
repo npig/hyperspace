@@ -165,9 +165,7 @@ namespace Hyperspace
 			{
 				if (_renderFeature != null)
 				{
-#if HAS_URP
 					_renderFeature.Camera = null;
-#endif
 					_renderFeature.CommandBuffer = null;
 				}
 			}

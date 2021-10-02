@@ -26,14 +26,13 @@ namespace Hyperspace
                 request.Send();
             }
             
-            /*
-            ImGui.BeginPopupContextWindow("nrg_stat");
+            ImGui.BeginPopup("nrg_stat");
             ImGui.Text($"Player");
             ImGui.SameLine();
             ImGui.SliderInt("Energy", ref _energy, 0, 100);
             ImGui.EndPopup();
             
-            ImGui.OpenPopup("nrg_stat");*/
+            ImGui.OpenPopup("nrg_stat");
             
             ImGui.End();
         }
@@ -42,15 +41,14 @@ namespace Hyperspace
     public class MainMenu : UILayout
     {
         private int _selectedItem = 0;
-        private string[] _serverList = new string[] { "no servers found" }; 
+        private string[] _serverList = new string[] { "no servers found" };
+        private int _nrg = 100;
         
         internal override void OnLayout()
         {
-            ImGui.Begin("HYPERSPACE");
-            /*
+            ImGui.Begin("HYPERSPACE" );
             ImGui.SetWindowSize(new Vector2(Screen.width / 4, Screen.height / 4));
             ImGui.SetWindowPos(new Vector2(Screen.width / 2 - Screen.width / 8, Screen.height / 2));
-            */
             
             ImGui.Text($"Server List");
             
