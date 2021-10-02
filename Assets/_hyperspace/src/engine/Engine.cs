@@ -193,19 +193,32 @@ namespace Hyperspace
         public Vector3 Acceleration { get; set; }
     }
 
+    public class SystemInputEvent : Event
+    {
+        public KeyCode KeyPressed { get; set; }
+
+        public SystemInputEvent Init(KeyCode keyPressed)
+        {
+            KeyPressed = keyPressed;
+            return this;
+        }
+    }
+    
     public class InputManager : EngineService
     {
-        private const KeyCode THRUST = KeyCode.W;
-        private const int LGHT_FIRE = 0;
-        private const int HVY_FIRE = 1;
-        private const KeyCode ABILITY_A = KeyCode.Q;
-        private const KeyCode ABILITY_B = KeyCode.E;
+        public static KeyCode THRUST = KeyCode.W;
+        public static int LGHT_FIRE = 0;
+        public static int HVY_FIRE = 1;
+        public static KeyCode ABILITY_A = KeyCode.Q;
+        public static KeyCode ABILITY_B = KeyCode.E;
+        public static KeyCode MENU = KeyCode.Tab;
 
         private InputState _inputState = new InputState();
 
         public override void OnTick()
         {
-            ControllerInput();
+            CraftInput();
+            SystemInput();
         }
 
         public ICraftCommandInput GetInputState(ICraftCommandInput craftCommandInput)
@@ -219,7 +232,7 @@ namespace Hyperspace
             return craftCommandInput;
         }
 
-        private void ControllerInput()
+        private void CraftInput()
         {
             _inputState.Controller = MousePosition();
             _inputState.Thrust = Input.GetKey(THRUST);
@@ -227,6 +240,12 @@ namespace Hyperspace
             _inputState.HeavyFire = Input.GetMouseButton(HVY_FIRE);
             _inputState.AbilityA = Input.GetKeyDown(ABILITY_A);
             _inputState.AbilityB = Input.GetKeyDown(ABILITY_B);
+        }
+
+        private void SystemInput()
+        {
+            if (Input.GetKeyDown(MENU))
+                Engine.Events.Emit<SystemInputEvent>(ObjectPool.Get<SystemInputEvent>().Init(MENU));
         }
         
         private Vector3? MousePosition()
@@ -255,7 +274,6 @@ namespace Hyperspace
         public virtual void Dispose()
         {
             UImGuiUtility.Layout -= OnLayout;
-            
         }
     }
 

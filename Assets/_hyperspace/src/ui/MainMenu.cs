@@ -5,6 +5,7 @@ using ImGuiNET;
 using Photon.Bolt;
 using Photon.Bolt.Matchmaking;
 using UdpKit;
+using UImGui;
 using UnityEngine;
 
 namespace Hyperspace
@@ -12,30 +13,50 @@ namespace Hyperspace
     public class GameMenu : UILayout
     {
         private int _energy = 100;
+        private bool _eanbleMenu = true;
         
+        public override void Load()
+        {
+            UImGuiUtility.Layout += OnLayout;
+            Engine.Events.Subscribe<SystemInputEvent>(OnSystemInput);
+        }
+
+        private void OnSystemInput(SystemInputEvent obj)
+        {
+            if (obj.KeyPressed == InputManager.MENU)
+                _eanbleMenu = !_eanbleMenu;
+        }
+
         internal override void OnLayout()
         {
-            ImGui.Begin("HYPERSPACE", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar);
-            ImGui.SetWindowPos(new Vector2( 10, 10));
-            ImGui.SetWindowSize(new Vector2(Screen.width / 10, Screen.height / 2));
-            
-            if (ImGui.Button("Join"))
-            {
-                var request = RequestSpawn.Create(GlobalTargets.OnlyServer);
-                request.CraftType = 0;
-                request.Send();
-            }
-            
-            ImGui.BeginPopup("nrg_stat");
-            ImGui.Text($"Player");
-            ImGui.SameLine();
-            ImGui.SliderInt("Energy", ref _energy, 0, 100);
-            ImGui.EndPopup();
-            
-            ImGui.OpenPopup("nrg_stat");
-            
+            ImGui.Begin("Header", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoInputs);
+            ImGui.SetWindowPos(new Vector2(0, 0));
+            ImGui.SetWindowSize(new Vector2(Screen.width, Screen.height / 16));
+            float posX = (ImGui.GetCursorPosX() + ImGui.GetColumnWidth() - ImGui.CalcItemWidth() + ImGui.GetStyle().ItemSpacing.x) / 2; 
+            ImGui.SetCursorPosX(posX);
+            bool v = ImGui.SliderInt("", ref _energy, 0, 10);
             ImGui.End();
+
+            if (_eanbleMenu)
+            {
+                ImGui.Begin("Menu", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar);
+                ImGui.SetWindowSize(new Vector2(Screen.width / 8, Screen.height / 4));
+                if (ImGui.Button("Join Game", new Vector2(ImGui.GetColumnWidth(), 18) ))
+                {
+                    var request = RequestSpawn.Create(GlobalTargets.OnlyServer);
+                    request.CraftType = 0;
+                    request.Send();
+                }
+                ImGui.End();
+            }
         }
+        
+        public override void Dispose()
+        {
+            UImGuiUtility.Layout -= OnLayout;
+            Engine.Events.Unsubscribe<SystemInputEvent>(OnSystemInput);
+        }
+
     }
     
     public class MainMenu : UILayout
@@ -46,7 +67,7 @@ namespace Hyperspace
         
         internal override void OnLayout()
         {
-            ImGui.Begin("HYPERSPACE" );
+            ImGui.Begin("HYPERSPACE");
             ImGui.SetWindowSize(new Vector2(Screen.width / 4, Screen.height / 4));
             ImGui.SetWindowPos(new Vector2(Screen.width / 2 - Screen.width / 8, Screen.height / 2));
             
