@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3848013765543710101}
   - component: {fileID: -7451679981956949027}
-  - component: {fileID: -1633366638341199555}
+  - component: {fileID: 4958942520205645911}
   m_Layer: 0
   m_Name: _projectileServer
   m_TagString: Untagged
@@ -45,23 +45,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ed559422b5548b4e8752b2dce7597f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &-1633366638341199555
-MonoBehaviour:
+--- !u!65 &4958942520205645911
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3848013765543710102}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
   m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 2041820988, guid: 5b00bf8b25851d440940a40ec23344f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _shape: 0
-  _type: 1
-  _center: {x: 0, y: 0, z: 0}
-  _boxSize: {x: 0.1, y: 0.1, z: 0.1}
-  _sphereRadius: 0.25
+  serializedVersion: 2
+  m_Size: {x: 0.1, y: 0.1, z: 0.1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &6949284271153806643
 GameObject:
   m_ObjectHideFlags: 0

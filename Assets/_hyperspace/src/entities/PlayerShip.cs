@@ -1,4 +1,5 @@
-﻿using Photon.Bolt;
+﻿using System;
+using Photon.Bolt;
 using UnityEngine;
 
 namespace Hyperspace.Entities
@@ -7,7 +8,8 @@ namespace Hyperspace.Entities
     {
         private CraftConfig _initialConfig;
         private CraftState _craftState;
-        private ProjectileBase _projectile; 
+        private ProjectileBase _projectile;
+        public Vector3 GetVelocity => _craftState.Velocity;
 
         public override void Initialized()
         {
@@ -81,9 +83,10 @@ namespace Hyperspace.Entities
             {
                 Vector3 directionToMouse = (inputController - _craftState.Position).normalized;
                 _craftState.Acceleration = directionToMouse * _initialConfig.Speed;
-                _craftState.Velocity += _craftState.Acceleration  * BoltNetwork.FrameDeltaTime;
+                _craftState.Velocity += _craftState.Acceleration * BoltNetwork.FrameDeltaTime;
+                _craftState.Velocity = Vector3.ClampMagnitude(_craftState.Velocity, 16);
             }
-            
+
             Vector3 force = MASS * _craftState.Velocity;
             _craftState.Position += force * BoltNetwork.FrameDeltaTime;
             transform.rotation = Quaternion.LookRotation((Vector3)inputController - _craftState.Position, Vector3.up);
@@ -109,14 +112,14 @@ namespace Hyperspace.Entities
 
                 if (entity.IsOwner)
                 {
-                    _projectile.OnOwner(command, entity);
+                    _projectile.OnOwner(command, entity, _craftState);
                 }
             }
         }
         
         private void OnFire()
         {
-            _projectile.OnClient(entity);
+            _projectile.OnClient(entity, _craftState);
         }
         
 

@@ -87,7 +87,7 @@ namespace Hyperspace.Entities
         private GameObject ServerProjectile;
         private GameObject ClientProjectile;
         
-        public float cooldown = 20f;
+        public float cooldown = 12f;
         public int cost = 5;
         public float fireFrame = 0;
 
@@ -102,14 +102,17 @@ namespace Hyperspace.Entities
             ClientProjectile = await Engine.LoadAsset<GameObject>(CLIENT_PROJECTILE);
         }
 
-        public virtual void OnOwner (CraftCommand cmd, BoltEntity entity)
+        public virtual void OnOwner(CraftCommand cmd, BoltEntity entity, CraftState craftState)
 		{
+            
             GameObject proj = GameObject.Instantiate(ServerProjectile, entity.transform.position, Quaternion.LookRotation(entity.transform.forward));
+            proj.GetComponent<Projectile>().SetVelocity(craftState.Velocity);
         }
 
-		public virtual void OnClient (BoltEntity entity)
+		public virtual void OnClient(BoltEntity entity, CraftState craftState)
 		{
             GameObject proj = GameObject.Instantiate(ClientProjectile, entity.transform.position, Quaternion.LookRotation(entity.transform.forward));
+            proj.GetComponent<Projectile>().SetVelocity(craftState.Velocity);
 		}
     }
 
