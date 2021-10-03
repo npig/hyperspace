@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Hyperspace.Entities;
-using Hyperspace.Networking;
 using Hyperspace.Utils;
-using ImGuiNET;
 using Photon.Bolt;
 using Photon.Bolt.Matchmaking;
 using UdpKit;
@@ -12,10 +10,7 @@ using UImGui;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.PlayerLoop;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.SceneManagement;
-using WebSocketSharp;
 
 namespace Hyperspace
 {
@@ -118,6 +113,7 @@ namespace Hyperspace
     public class Camera : EngineService
     {
         public UnityEngine.Camera MainCamera { get; private set; }
+        private Transform _target;
 
         public Camera()
         {
@@ -132,6 +128,28 @@ namespace Hyperspace
             MainCamera.orthographicSize = 12;
             MainCamera.clearFlags = CameraClearFlags.SolidColor;
             MainCamera.backgroundColor = new Color(.1f,.1f,.1f);
+        }
+
+        public override void OnTick()
+        {
+            if (_target == null && BoltNetwork.IsServer)
+            {
+                var current = NetworkManager.GetPlayers().GetEnumerator().Current;
+                if (current != null)
+                    _target = current.Entity.transform;
+            }
+
+            if(_target == null)
+                return;
+
+            Vector3 cameraPosition = _target.transform.position;
+            cameraPosition.y = 10;
+            MainCamera.transform.position = cameraPosition;
+        }
+
+        public void SetTarget(Transform target)
+        {
+            _target = target;
         }
     }
 

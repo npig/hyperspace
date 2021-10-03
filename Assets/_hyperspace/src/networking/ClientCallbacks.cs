@@ -1,4 +1,5 @@
 ﻿using System;
+using Hyperspace.Level;
 using Photon.Bolt;
 using UdpKit;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace Hyperspace.Networking
             if (scene == "game")
             {
                 Engine.UIManager.LoadScreen(new GameMenu());
+                LevelManager.Load();
             }
         }
         
@@ -39,6 +41,7 @@ namespace Hyperspace.Networking
 
         public override void ControlOfEntityGained(BoltEntity entity)
         {
+            Engine.Camera.SetTarget(entity.transform);
             UILayout layout = new GameHUD(entity);
             layout.Load();
         }

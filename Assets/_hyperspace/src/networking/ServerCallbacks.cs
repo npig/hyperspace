@@ -1,4 +1,5 @@
 ﻿using Hyperspace.Entities;
+using Hyperspace.Level;
 using Hyperspace.Utils;
 using Photon.Bolt;
 using UdpKit;
@@ -21,7 +22,13 @@ namespace Hyperspace.Networking
             NetworkManager.CreateSession();
         }
 
-        public override void SceneLoadLocalDone(string scene, IProtocolToken token) { }
+        public override void SceneLoadLocalDone(string scene, IProtocolToken token)
+        {
+            if (scene == "game")
+            {
+                LevelManager.Load();
+            }
+        }
 
         public override void SessionCreationFailed(UdpSession session, UdpSessionError errorReason)
         {
@@ -40,7 +47,7 @@ namespace Hyperspace.Networking
         {
             BoltConnection connection = request.RaisedBy;
             CraftConfig tokenConfig = new CraftConfig(100, 1, 15);
-            BoltEntity boltEntity = BoltNetwork.Instantiate(BoltPrefabs._playerShip, tokenConfig, Vector3.zero, Quaternion.identity);
+            BoltEntity boltEntity = BoltNetwork.Instantiate(BoltPrefabs._playerShip, tokenConfig, LevelManager.GetSpawn(), Quaternion.identity);
             connection.GetPlayer().Entity = boltEntity; 
             boltEntity.AssignControl(connection);
         }
