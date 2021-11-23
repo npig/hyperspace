@@ -87,9 +87,9 @@ namespace Hyperspace.Entities
         private GameObject ServerProjectile;
         private GameObject ClientProjectile;
         
-        public float cooldown = 12f;
-        public int cost = 5;
-        public float fireFrame = 0;
+        public float Cooldown = 12f;
+        public int Cost = 5;
+        public float FireFrame = 0;
 
         public ProjectileBase()
         {
@@ -114,6 +114,8 @@ namespace Hyperspace.Entities
             GameObject proj = GameObject.Instantiate(ClientProjectile, entity.transform.position, Quaternion.LookRotation(entity.transform.forward));
             proj.GetComponent<Projectile>().SetVelocity(craftState.Velocity);
 		}
+
+
     }
 
     public class Player : IDisposable

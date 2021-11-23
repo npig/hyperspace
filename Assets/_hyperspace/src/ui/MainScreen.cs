@@ -14,7 +14,6 @@ namespace Hyperspace
     {
         private int _selectedItem = 0;
         private string[] _serverList = new string[] { "no servers found" };
-        private int _nrg = 100;
         
         internal override void OnLayout()
         {

@@ -23,7 +23,8 @@ namespace Hyperspace
         public static EntityManager EntityManager { get; private set; }
         public static UIManager UIManager { get; private set; }
         public static InputManager InputManager { get; private set; }
-
+        public static Physics Physics { get; private set; }
+        
         private static void StartServer() => BoltLauncher.StartServer();
         private static void StartClient() => BoltLauncher.StartClient();
 
@@ -49,6 +50,7 @@ namespace Hyperspace
             EntityManager = ServiceManager.CreateService<EntityManager>();
             InputManager = ServiceManager.CreateService<InputManager>();
             UIManager = ServiceManager.CreateService<UIManager>();
+            Physics = ServiceManager.CreateService<Physics>();
 
 #if UNITY_EDITOR
             if (EditorPrefs.GetBool("EnableUIDev"))
@@ -134,7 +136,7 @@ namespace Hyperspace
         {
             if (_target == null && BoltNetwork.IsServer)
             {
-                var current = NetworkManager.GetPlayers().GetEnumerator().Current;
+                Player current = NetworkManager.GetPlayers()[0];
                 if (current != null)
                     _target = current.Entity.transform;
             }
@@ -174,7 +176,7 @@ namespace Hyperspace
             _playerList.Add(player);
         }
 
-        public static IEnumerable<Player> GetPlayers()
+        public static List<Player> GetPlayers()
         {
             return _playerList;
         }
@@ -219,6 +221,16 @@ namespace Hyperspace
         public Vector3 Position { get; set; }
         public Vector3 Velocity { get; set; }
         public Vector3 Acceleration { get; set; }
+        public float Speed { get; set; }
+        public bool CollisionDetected { get; set; }
+        
+        public CraftState() { }
+        
+        public CraftState(Vector3 transformPosition)
+        {
+            Position = transformPosition;
+        }
+
     }
 
     public class SystemInputEvent : Event
@@ -260,6 +272,7 @@ namespace Hyperspace
             return craftCommandInput;
         }
 
+        //todo: flags should be cleared once the input has been processed - effects single shot inpput.
         private void CraftInput()
         {
             _inputState.Controller = MousePosition();
@@ -327,5 +340,56 @@ namespace Hyperspace
             _currentLayout?.Dispose();
             _currentLayout = null;
         }
+    }
+
+    public sealed class Physics : EngineService
+    {
+        public override TickType TickType { get; internal set; } = TickType.FixedUpdate;
+
+        public override void OnTick()
+        {
+            base.OnTick();
+        }
+
+        public override UniTaskVoid OnInitialised()
+        {
+            return default;
+        }
+        
+        public static bool DetectCollision(Vector3 position, Vector3 velocity, out RaycastHit hit)
+        {
+            Ray ray = new Ray(position, velocity);
+            if (UnityEngine.Physics.Raycast(ray, out hit, .5f, 1 << 9))
+            {
+                Debug.Log($"## Collision Detected ##");
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool DetectCollision(Vector3 position, Vector3 velocity)
+        {
+            return DetectCollision(position, velocity, out _);
+        }
+
+        public static Vector3 ProcessCollision(RaycastHit hit, Vector3 velocity)
+        {
+            float dot = Vector3.Dot(hit.normal, velocity.normalized);
+            Vector3 normalProjection = 2 * dot * hit.normal;
+            Vector3 reflection = velocity.normalized - normalProjection;
+            Vector3 result = reflection * (velocity.magnitude * .8f);
+            return result;
+        }
+        
+        public static Vector3 ProcessCollision(Vector3 hitNormal, Vector3 velocity)
+        {
+            float dot = Vector3.Dot(hitNormal, velocity.normalized);
+            Vector3 normalProjection = 2 * dot * hitNormal;
+            Vector3 reflection = velocity.normalized - normalProjection;
+            Vector3 result = reflection * (velocity.magnitude * .8f);
+            return result;
+        }
+
     }
 }

@@ -7,7 +7,8 @@ namespace Hyperspace
     {
         public Action OnUpdateAction;
         public Action OnDestroyAction;
-        
+        public Action OnFixedUpdateAction;
+
         private void Awake()
         {
             DontDestroyOnLoad(this);
@@ -21,6 +22,11 @@ namespace Hyperspace
         private void OnDestroy()
         {
             OnDestroyAction?.Invoke();
+        }
+
+        private void FixedUpdate()
+        {
+            OnFixedUpdateAction?.Invoke();
         }
     }
 }
