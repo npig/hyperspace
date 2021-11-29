@@ -1,9 +1,6 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using ImGuiNET;
+﻿using System.Runtime.InteropServices;
 using Photon.Bolt;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Hyperspace.Entities
 {
@@ -18,7 +15,6 @@ namespace Hyperspace.Entities
         public override void Initialized()
         {
             base.Initialized();
-            // Hyperspace.Engine.Events.Emit<OnPlayerInitialisedState>(ObjectPool.Get<OnPlayerInitialisedState>().Init(this));
         }
 
         private void Awake()
@@ -49,19 +45,19 @@ namespace Hyperspace.Entities
         
         public override void SimulateController()
         {
-            ICraftCommandInput input = CraftCommand.Create();
-            input = Engine.InputManager.GetInputState(input);
-            entity.QueueInput(input);
-
-            if (_generator.CollisionDetected)
+            if (Physics.DetectCollision(Position, Velocity, out RaycastHit hit))
             {
-                Physics.DetectCollision(Position, Velocity, out RaycastHit hit);
                 ICollisionCommandInput collisionInput = CollisionCommand.Create();
                 collisionInput.CollisionDetected = true;
                 collisionInput.HitNormal = hit.normal;
-                collisionInput.Velocity = _generator.Velocity;
+                collisionInput.Velocity = Velocity;
+                collisionInput.Position = Position;
                 entity.QueueInput(collisionInput);
             }
+            
+            ICraftCommandInput input = CraftCommand.Create();
+            input = Engine.InputManager.GetInputState(input);
+            entity.QueueInput(input);
 
             if(state.CraftData.Energy < 100)
                 state.CraftData.Energy += 1;
@@ -69,13 +65,12 @@ namespace Hyperspace.Entities
 
         public override void ExecuteCommand(Command command, bool resetState)
         {
-            if (command is CraftCommand cmd)
+            switch (command)
             {
-                if (resetState)
-                {
-                    _generator.SetCraftState(cmd);
-                }
-                else
+                case CraftCommand cmd when resetState:
+                    _generator.SetCraftState(cmd.Result.Position, cmd.Result.Velocity, cmd.Result.Acceleration);
+                    break;
+                case CraftCommand cmd:
                 {
                     CraftState craftState = _generator.ApplyForce(cmd.Input.Controller, cmd.Input.Thrust);
                     cmd.Result.Position = craftState.Position;
@@ -87,22 +82,23 @@ namespace Hyperspace.Entities
                         if(cmd.Input.LightFire)
                             FireProjectile(cmd);
                     }
+
+                    break;
                 }
-            }
-            else if (command is CollisionCommand ccmd)
-            {
-                if (resetState)
-                {
+                case CollisionCommand ccmd when resetState:
                     _generator.Velocity = ccmd.Result.CollisionVelocity;
-                }
-                else
+                    _generator.Position = ccmd.Result.CollisionPosition;
+                    break;
+                case CollisionCommand ccmd:
                 {
                     Vector3 collisionVelocity = Physics.ProcessCollision(ccmd.Input.HitNormal, ccmd.Input.Velocity);
                     ccmd.Result.CollisionVelocity = collisionVelocity;
+                    ccmd.Result.CollisionPosition = ccmd.Input.Position;
                     _generator.Velocity = collisionVelocity;
+                    _generator.Position = ccmd.Input.Position;
+                    break;
                 }
             }
-
         }
 
         /*private void OnCollision(RaycastHit hit)
@@ -163,7 +159,7 @@ namespace Hyperspace.Entities
 
     internal sealed class Generator
     {
-        //private CollisionData _collisionData;
+        private const float SPEED_MULTIPLIER = 30;
         private EntityBehaviour<IPlayerShipState> _parent;
         private Rigidbody _rigidbody;
         private CraftState _state;
@@ -182,15 +178,8 @@ namespace Hyperspace.Entities
         public Vector3 Position 
         {
             get => _state.Position;
-            private set => _state.Position = value;
+            set => _state.Position = value;
         }
-
-        public bool CollisionDetected
-        {
-            get => _state.CollisionDetected;
-            set => _state.CollisionDetected = value;
-        }
-
 
         public Generator(EntityBehaviour<IPlayerShipState> parent, CraftState state)
         {
@@ -204,49 +193,32 @@ namespace Hyperspace.Entities
 
             _rigidbody.isKinematic = true;
             parent.transform.position = _state.Position;
-            //Freeze Rotation and Position
-            //Set Drag
         }
 
         public CraftState ApplyForce(Vector3 inputAxis, bool inputThrust)
         {
             Vector3 directionToMouse = (inputAxis - Position).normalized;
-            Quaternion q = Quaternion.LookRotation(directionToMouse, Vector3.up);
-            _parent.transform.localRotation = q;
+            /*Quaternion q = Quaternion.LookRotation(directionToMouse, Vector3.up);
+            _parent.transform.localRotation = q;*/
             
             if (inputThrust)
             {
-                //change to input direction
-                Acceleration = directionToMouse * BoltNetwork.FrameDeltaTime * 30;
+                Acceleration = directionToMouse * BoltNetwork.FrameDeltaTime * SPEED_MULTIPLIER;
                 Acceleration = Vector3.ClampMagnitude(Acceleration, 2f);
                 Velocity += Acceleration * BoltNetwork.FrameDeltaTime;
+                Velocity = Vector3.ClampMagnitude(Velocity, 10);
             }
-            
-            Vector3.ClampMagnitude(Velocity, 15);
-            _rigidbody.MovePosition(Position + Velocity);
-            Position = _rigidbody.position;
+
             return _state;
         }
-        
-        public void SetCraftState(CraftCommand cmd)
+
+        public void SetCraftState(Vector3 resultPosition, Vector3 resultVelocity, Vector3 resultAcceleration)
         {
-            /*Vector3 resultVelocity = cmd.Result.Velocity;
-            
-            if (cmd.Result.Collision)
-            {
-                Debug.Log($"$$ Set State $$");
-                Physics.DetectCollision(cmd.Result.Position, cmd.Result.Velocity, out var hit);
-                resultVelocity = Physics.ProcessCollision(hit, cmd.Result.Velocity);
-            }*/
-            
-            SetCraftState(cmd.Result.Position, cmd.Result.Velocity, cmd.Result.Acceleration);
-        }
-        
-        private void SetCraftState(Vector3 resultPosition, Vector3 resultVelocity, Vector3 resultAcceleration)
-        {
-            Position += (resultPosition - Position);
+            Debug.Log($"{(resultPosition - Position).magnitude}");
+            Acceleration += resultAcceleration - Acceleration;
             Velocity += resultVelocity - Velocity;
-            Acceleration = resultAcceleration;
+            Position += resultPosition - Position;
+            _parent.transform.position = Position;
             _rigidbody.MovePosition(Position + Velocity);
         }
 
@@ -260,7 +232,15 @@ namespace Hyperspace.Entities
             if(Entity.IsAttached == false || Entity.IsControllerOrOwner == false)
                 return; 
             
-            _state.CollisionDetected = Physics.DetectCollision(Position, Velocity);
+            _rigidbody.MovePosition(Position + Velocity);
+
+            if (_rigidbody.velocity.magnitude > 10)
+            {
+                _rigidbody.velocity = Vector3.ClampMagnitude(_rigidbody.velocity, 10);
+            }
+            
+            
+            Position = _rigidbody.position;
         }
     }
 }

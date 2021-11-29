@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using Hyperspace.Entities;
 using Hyperspace.Utils;
@@ -136,8 +137,8 @@ namespace Hyperspace
         {
             if (_target == null && BoltNetwork.IsServer)
             {
-                Player current = NetworkManager.GetPlayers()[0];
-                if (current != null)
+                Player current = NetworkManager.GetPlayer(0);
+                if (current != null && current.Entity.IsAttached)
                     _target = current.Entity.transform;
             }
 
@@ -179,6 +180,11 @@ namespace Hyperspace
         public static List<Player> GetPlayers()
         {
             return _playerList;
+        }
+
+        public static Player GetPlayer(int id)
+        {
+            return _playerList.ElementAtOrDefault(id);
         }
         
         //Client
@@ -222,7 +228,6 @@ namespace Hyperspace
         public Vector3 Velocity { get; set; }
         public Vector3 Acceleration { get; set; }
         public float Speed { get; set; }
-        public bool CollisionDetected { get; set; }
         
         public CraftState() { }
         
@@ -359,9 +364,8 @@ namespace Hyperspace
         public static bool DetectCollision(Vector3 position, Vector3 velocity, out RaycastHit hit)
         {
             Ray ray = new Ray(position, velocity);
-            if (UnityEngine.Physics.Raycast(ray, out hit, .5f, 1 << 9))
+            if (UnityEngine.Physics.Raycast(ray, out hit, 1f, 1 << 9))
             {
-                Debug.Log($"## Collision Detected ##");
                 return true;
             }
 
@@ -373,14 +377,14 @@ namespace Hyperspace
             return DetectCollision(position, velocity, out _);
         }
 
-        public static Vector3 ProcessCollision(RaycastHit hit, Vector3 velocity)
+        /*public static Vector3 ProcessCollision(RaycastHit hit, Vector3 velocity)
         {
             float dot = Vector3.Dot(hit.normal, velocity.normalized);
             Vector3 normalProjection = 2 * dot * hit.normal;
             Vector3 reflection = velocity.normalized - normalProjection;
             Vector3 result = reflection * (velocity.magnitude * .8f);
             return result;
-        }
+        }*/
         
         public static Vector3 ProcessCollision(Vector3 hitNormal, Vector3 velocity)
         {
