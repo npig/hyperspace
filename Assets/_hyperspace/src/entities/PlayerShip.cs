@@ -45,20 +45,20 @@ namespace Hyperspace.Entities
         
         public override void SimulateController()
         {
-            if (Physics.DetectCollision(Position, Velocity, out RaycastHit hit))
+            ICraftCommandInput input = CraftCommand.Create();
+            input = Engine.InputManager.GetInputState(input);
+            entity.QueueInput(input);
+
+            if (_generator.CollisionDetected)
             {
+                Physics.DetectCollision(Position, Velocity, out RaycastHit hit);
                 ICollisionCommandInput collisionInput = CollisionCommand.Create();
-                collisionInput.CollisionDetected = true;
                 collisionInput.HitNormal = hit.normal;
                 collisionInput.Velocity = Velocity;
                 collisionInput.Position = Position;
                 entity.QueueInput(collisionInput);
             }
             
-            ICraftCommandInput input = CraftCommand.Create();
-            input = Engine.InputManager.GetInputState(input);
-            entity.QueueInput(input);
-
             if(state.CraftData.Energy < 100)
                 state.CraftData.Energy += 1;
         }
@@ -86,53 +86,22 @@ namespace Hyperspace.Entities
                     break;
                 }
                 case CollisionCommand ccmd when resetState:
-                    _generator.Velocity = ccmd.Result.CollisionVelocity;
-                    _generator.Position = ccmd.Result.CollisionPosition;
+                    _generator.SetCraftState(ccmd.Result.CollisionPosition, ccmd.Result.CollisionVelocity, ccmd.Result.CollisionAcceleration);
+                    Console.Log($"{BoltNetwork.IsServer} : Collision Reset");
                     break;
                 case CollisionCommand ccmd:
                 {
                     Vector3 collisionVelocity = Physics.ProcessCollision(ccmd.Input.HitNormal, ccmd.Input.Velocity);
-                    ccmd.Result.CollisionVelocity = collisionVelocity;
-                    ccmd.Result.CollisionPosition = ccmd.Input.Position;
-                    _generator.Velocity = collisionVelocity;
-                    _generator.Position = ccmd.Input.Position;
+                    CraftState craftState = _generator.ApplyCollision(ccmd.Input.Position, collisionVelocity, ccmd.Input.Acceleration);
+                    ccmd.Result.CollisionPosition = craftState.Position;
+                    ccmd.Result.CollisionVelocity = craftState.Velocity;
+                    ccmd.Result.CollisionAcceleration = craftState.Acceleration;
+                    Console.Log($"{BoltNetwork.IsServer} : Collision Command");
                     break;
                 }
             }
         }
 
-        /*private void OnCollision(RaycastHit hit)
-        {
-            float dot = Vector3.Dot(hit.normal, _state.Velocity.normalized);
-            Vector3 normalProjection = 2 * dot * hit.normal;
-            Vector3 reflection = _state.Velocity.normalized - normalProjection;
-            Vector3 result = reflection * (_state.Velocity.magnitude * .8f);
-            _state.Velocity = result;
-        }*/
-
-        /*private void SetCraftState(Vector3 resultPosition, Vector3 resultVelocity, Vector3 resultAcceleration)
-        {
-            _state.Position = resultPosition;
-            _state.Velocity = resultVelocity;
-            _state.Acceleration = resultAcceleration;
-            transform.position = (_state.Position - transform.position);
-        }*/
-        
-        /*private void FireProjectile(CraftCommand command)
-        {
-            if (_projectile.fireFrame + _projectile.cooldown <= BoltNetwork.ServerFrame && state.CraftData.Energy - _projectile.cost > 0)
-            {
-                _projectile.fireFrame = BoltNetwork.ServerFrame;
-                state.CraftData.Energy -= _projectile.cost;
-                state.Fire();
-
-                if (entity.IsOwner)
-                {
-                    _projectile.OnOwner(command, entity, _state);
-                }
-            }
-        }*/
-        
         public void FireProjectile(CraftCommand command)
         {
             if (
@@ -160,9 +129,11 @@ namespace Hyperspace.Entities
     internal sealed class Generator
     {
         private const float SPEED_MULTIPLIER = 30;
+        private const float VELOCITY_CAP = 5;
         private EntityBehaviour<IPlayerShipState> _parent;
         private Rigidbody _rigidbody;
         private CraftState _state;
+        private bool _collisionDetected;
 
         public BoltEntity Entity => _parent.entity;
         public Vector3 Velocity
@@ -180,6 +151,7 @@ namespace Hyperspace.Entities
             get => _state.Position;
             set => _state.Position = value;
         }
+        public bool CollisionDetected => _collisionDetected;
 
         public Generator(EntityBehaviour<IPlayerShipState> parent, CraftState state)
         {
@@ -206,7 +178,7 @@ namespace Hyperspace.Entities
                 Acceleration = directionToMouse * BoltNetwork.FrameDeltaTime * SPEED_MULTIPLIER;
                 Acceleration = Vector3.ClampMagnitude(Acceleration, 2f);
                 Velocity += Acceleration * BoltNetwork.FrameDeltaTime;
-                Velocity = Vector3.ClampMagnitude(Velocity, 10);
+                Velocity = Vector3.ClampMagnitude(Velocity, 5);
             }
 
             return _state;
@@ -214,12 +186,10 @@ namespace Hyperspace.Entities
 
         public void SetCraftState(Vector3 resultPosition, Vector3 resultVelocity, Vector3 resultAcceleration)
         {
-            Debug.Log($"{(resultPosition - Position).magnitude}");
             Acceleration += resultAcceleration - Acceleration;
             Velocity += resultVelocity - Velocity;
             Position += resultPosition - Position;
-            _parent.transform.position = Position;
-            _rigidbody.MovePosition(Position + Velocity);
+            _rigidbody.position = Position;
         }
 
         public CraftState GetCraftState()
@@ -230,17 +200,26 @@ namespace Hyperspace.Entities
         public void FixedUpdate()
         {
             if(Entity.IsAttached == false || Entity.IsControllerOrOwner == false)
-                return; 
-            
-            _rigidbody.MovePosition(Position + Velocity);
+                return;
 
-            if (_rigidbody.velocity.magnitude > 10)
+            if (_rigidbody.velocity.magnitude > 5)
             {
-                _rigidbody.velocity = Vector3.ClampMagnitude(_rigidbody.velocity, 10);
+                Vector3 velocityScaled = _rigidbody.velocity.normalized * VELOCITY_CAP;
+                _rigidbody.velocity = velocityScaled;
             }
             
-            
+            _collisionDetected = Physics.DetectCollision(Position, Velocity);
+            _rigidbody.MovePosition(Position + Velocity);
             Position = _rigidbody.position;
+        }
+
+        public CraftState ApplyCollision(Vector3 inputPosition, Vector3 collisionVelocity, Vector3 inputAcceleration)
+        {
+            Position += inputPosition - Position;
+            Velocity += collisionVelocity - Velocity;
+            Acceleration += inputAcceleration - Acceleration;
+            _rigidbody.position = Position;
+            return _state;
         }
     }
 }

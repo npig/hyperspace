@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Cysharp.Threading.Tasks;
 using Hyperspace.Entities;
 using Hyperspace.Utils;
@@ -25,6 +27,7 @@ namespace Hyperspace
         public static UIManager UIManager { get; private set; }
         public static InputManager InputManager { get; private set; }
         public static Physics Physics { get; private set; }
+        public static Console Console { get; private set; }
         
         private static void StartServer() => BoltLauncher.StartServer();
         private static void StartClient() => BoltLauncher.StartClient();
@@ -52,6 +55,7 @@ namespace Hyperspace
             InputManager = ServiceManager.CreateService<InputManager>();
             UIManager = ServiceManager.CreateService<UIManager>();
             Physics = ServiceManager.CreateService<Physics>();
+            Console = ServiceManager.CreateService<Console>();
 
 #if UNITY_EDITOR
             if (EditorPrefs.GetBool("EnableUIDev"))
@@ -376,15 +380,6 @@ namespace Hyperspace
         {
             return DetectCollision(position, velocity, out _);
         }
-
-        /*public static Vector3 ProcessCollision(RaycastHit hit, Vector3 velocity)
-        {
-            float dot = Vector3.Dot(hit.normal, velocity.normalized);
-            Vector3 normalProjection = 2 * dot * hit.normal;
-            Vector3 reflection = velocity.normalized - normalProjection;
-            Vector3 result = reflection * (velocity.magnitude * .8f);
-            return result;
-        }*/
         
         public static Vector3 ProcessCollision(Vector3 hitNormal, Vector3 velocity)
         {
@@ -393,6 +388,37 @@ namespace Hyperspace
             Vector3 reflection = velocity.normalized - normalProjection;
             Vector3 result = reflection * (velocity.magnitude * .8f);
             return result;
+        }
+
+    }
+
+    public class Console : EngineService
+    {
+        private static string Path => Application.streamingAssetsPath;
+        private static StreamWriter _streamWriter;
+        
+        public Console()
+        {
+            try
+            {
+                string filename = Regex.Replace(Convert.ToBase64String(Guid.NewGuid().ToByteArray()), "[/+=]", "");
+                _streamWriter = new StreamWriter(Path + filename);
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine(e);
+                throw;
+            }
+        }
+
+        public override void OnShutdown()
+        {
+            _streamWriter.Close();
+        }
+        
+        public static void Log(string s)
+        {
+            _streamWriter.WriteLine(s);
         }
 
     }
