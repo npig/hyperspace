@@ -419,6 +419,7 @@ namespace Hyperspace
         public static void Log(string s)
         {
             _streamWriter.WriteLine(s);
+            Debug.Log(s);
         }
 
     }
