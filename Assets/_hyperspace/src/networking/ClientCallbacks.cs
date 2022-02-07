@@ -14,6 +14,7 @@ namespace Hyperspace.Networking
             if (scene == "game")
             {
                 Engine.UIManager.LoadScreen(new GameMenu());
+
                 LevelManager.Load();
             }
         }

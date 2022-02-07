@@ -7,7 +7,7 @@ namespace Hyperspace
 {
     public class GameMenu : UILayout
     {
-        private bool _eanbleMenu = true;
+        private bool _eanbleMenu = false;
 
         public override void Load()
         {
@@ -25,8 +25,11 @@ namespace Hyperspace
         {
             if (_eanbleMenu)
             {
-                ImGui.Begin("Menu", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar);
+                ImGui.Begin("Menu");
+                /*
                 ImGui.SetWindowSize(new Vector2(Screen.width / 8, Screen.height / 4));
+                ImGui.SetWindowPos(new Vector2(Screen.width / 2 - Screen.width / 8, Screen.height / 2));
+                */
                 if (ImGui.Button("Join Game", new Vector2(ImGui.GetColumnWidth(), 18) ))
                 {
                     var request = RequestSpawn.Create(GlobalTargets.OnlyServer);

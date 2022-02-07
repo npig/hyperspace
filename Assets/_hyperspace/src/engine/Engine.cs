@@ -260,7 +260,8 @@ namespace Hyperspace
         public static int HVY_FIRE = 1;
         public static KeyCode ABILITY_A = KeyCode.Q;
         public static KeyCode ABILITY_B = KeyCode.E;
-        public static KeyCode MENU = KeyCode.Tab;
+        public static KeyCode MENU = KeyCode.F1;
+        public static KeyCode CONSOLE = KeyCode.BackQuote;
 
         private InputState _inputState = new InputState();
 
@@ -296,6 +297,9 @@ namespace Hyperspace
         {
             if (Input.GetKeyDown(MENU))
                 Engine.Events.Emit<SystemInputEvent>(ObjectPool.Get<SystemInputEvent>().Init(MENU));
+            
+            if (Input.GetKeyDown(CONSOLE))
+                Engine.Events.Emit<SystemInputEvent>(ObjectPool.Get<SystemInputEvent>().Init(CONSOLE));
         }
         
         private Vector3? MousePosition()
@@ -378,6 +382,7 @@ namespace Hyperspace
 
         public static bool DetectCollision(Vector3 position, Vector3 velocity)
         {
+            Console.Log("test");
             return DetectCollision(position, velocity, out _);
         }
         
@@ -392,13 +397,28 @@ namespace Hyperspace
 
     }
 
+    public class ConsoleLogEvent : Event
+    {
+        public string Entry;
+
+        public ConsoleLogEvent Init(string s)
+        {
+            Entry = s;
+            return this;
+        }
+    }
+    
     public class Console : EngineService
     {
         private static string Path => Application.streamingAssetsPath;
         private static StreamWriter _streamWriter;
+        private static UILayout _uiLayout;
         
         public Console()
         {
+            _uiLayout = new GameConsole();
+            _uiLayout.Load();
+            
             try
             {
                 string filename = Regex.Replace(Convert.ToBase64String(Guid.NewGuid().ToByteArray()), "[/+=]", "");
@@ -414,13 +434,15 @@ namespace Hyperspace
         public override void OnShutdown()
         {
             _streamWriter.Close();
-        }
-        
-        public static void Log(string s)
-        {
-            _streamWriter.WriteLine(s);
-            Debug.Log(s);
+            _uiLayout.Dispose();
         }
 
+        public static void Log(string s)
+        {
+            DateTime time = DateTime.Now;
+            string dateString = $"{time.Hour}:{time.Minute}:{time.Second} | {s}";
+            Engine.Events.Emit<ConsoleLogEvent>(ObjectPool.Get<ConsoleLogEvent>().Init(dateString));
+            _streamWriter.WriteLine(dateString);
+        }
     }
 }
